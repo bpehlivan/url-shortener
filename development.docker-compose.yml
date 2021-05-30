@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: development.Dockerfile
+    image: url_shortener_app
+    container_name: url_shortener_app
+    env_file: .env
+    working_dir: /code
+    command: go run main.go serve
+    volumes:
+      - ./src:/code
+    stdin_open: true
+    tty: true
+    ports:
+    - "${APP_CONTAINER_EXPOSE_PORT}:${APPLICATION_PORT}"
+    depends_on:
+      - db
+
+  db:
+    env_file: .env
+    image: postgres:13.3-alpine
+    container_name: urls_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      PGPORT: ${POSTGRES_DB_PORT}
+    ports:
+      - "${POSTGRES_HOST_FORWARD_PORT}:${POSTGRES_DB_PORT}"
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+
+volumes:
+  postgresdata:
+    driver: local
